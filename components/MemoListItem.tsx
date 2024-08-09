@@ -30,7 +30,7 @@ const MemoListItem: React.FC<MemoListItemProps> = ({ uri, activeMemo, setActiveM
     }
 
     console.log('Playing Sound');
-    await sound.setPositionAsync(0);
+    // await sound.setPositionAsync(0);
     await sound.setProgressUpdateIntervalAsync(1);
     await sound.playAsync();
   }
@@ -55,6 +55,13 @@ const MemoListItem: React.FC<MemoListItemProps> = ({ uri, activeMemo, setActiveM
       : undefined;
   }, [sound]);
 
+  const formatMillis = (millis: number) => {
+    const seconds = Math.floor(millis / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+  }
+
   const position = status?.isLoaded ? status.positionMillis : 0;
   const duration = status?.isLoaded ? status.durationMillis : 1;
   const progress = (position / (duration || 1)) * 100;
@@ -78,7 +85,7 @@ const MemoListItem: React.FC<MemoListItemProps> = ({ uri, activeMemo, setActiveM
         <View style={style.playbackBackground} />
         <View style={[style.playbackIndicator, { left: `${progress}%` }]} />
       </View>
-      <Text>{duration}</Text>
+      <Text>{formatMillis(position || 0)} /{formatMillis(duration || 0)}</Text>
     </View>
   );
 };

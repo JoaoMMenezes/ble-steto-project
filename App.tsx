@@ -3,17 +3,19 @@ import { View, StyleSheet, Pressable, FlatList } from 'react-native';
 import { Audio } from 'expo-av';
 import { Recording } from 'expo-av/build/Audio';
 import MemoListItem from './components/MemoListItem';
-import AudioGraph from './components/AudioGraph';
+import AudioChart from './components/AudioChart'; // Importe o novo componente
 
 export default function App() {
   const [recording, setRecording] = useState<Recording>();
   const [permissionResponse, requestPermission] = Audio.usePermissions();
   const [memos, setMemos] = useState<string[]>([]);
   const [activeMemo, setActiveMemo] = useState<string | undefined>();
+  const [meteringData, setMeteringData] = useState<number[]>([0]);
+  const [showChart, setShowChart] = useState(true);
 
   async function startRecording() {
     try {
-      if (permissionResponse.status !== 'granted') {
+      if (permissionResponse?.status !== 'granted') {
         console.log('Requesting permission..');
         await requestPermission();
       }
@@ -28,6 +30,11 @@ export default function App() {
       );
       setRecording(recording);
       console.log('Recording started');
+
+      recording.setProgressUpdateInterval(1);
+      recording.setOnRecordingStatusUpdate((status) => {
+        setMeteringData((prevData) => [...prevData, status.metering || 0]);
+      });
     } catch (err) {
       console.error('Failed to start recording', err);
     }
@@ -45,16 +52,22 @@ export default function App() {
       allowsRecordingIOS: false,
     });
     const uri = recording.getURI();
-    console.log('Recording stopped and stored at', uri);
+    console.log('Metering data:', meteringData);
 
     if (uri) {
       setMemos((existingMemos) => [uri, ...existingMemos]);
     }
+
+    setShowChart(true); // Mostra o gráfico após parar a gravação
   }
 
-  useEffect(() => {
-    console.log(activeMemo);
-  }, [activeMemo]);
+  async function clearMemos() {
+    setMemos([]);
+  }
+
+  async function clearMeteringData() {
+    setMeteringData([0]);
+  }
 
   return (
     <View style={styles.container}>
@@ -66,21 +79,45 @@ export default function App() {
         keyExtractor={(item) => item}
       />
 
+      {showChart && <AudioChart data={meteringData} />}
+
       <View style={styles.footer}>
-        <Pressable
-          style={styles.recordButton}
-          onPress={recording ? stopRecording : startRecording}
-        >
-          <View
-            style={[
-              styles.redCircle,
-              { width: recording ? '80%' : '100%' },
-              { opacity: recording ? 0.5 : 1 },
-            ]}
-          />
-        </Pressable>
+        <View style={styles.footer}>
+          <Pressable
+            style={styles.recordButton}
+            onPress={clearMeteringData}
+          >
+            <View
+              style={styles.deleteButton}
+            />
+          </Pressable>
+        </View>
+        <View style={styles.footer}>
+          <Pressable
+            style={styles.recordButton}
+            onPress={recording ? stopRecording : startRecording}
+          >
+            <View
+              style={[
+                styles.redCircle,
+                { width: recording ? '80%' : '100%' },
+                { opacity: recording ? 0.5 : 1 },
+              ]}
+            />
+          </Pressable>
+        </View>
+        <View style={styles.footer}>
+          <Pressable
+            style={styles.recordButton}
+            onPress={clearMemos}
+          >
+            <View
+              style={styles.deleteButton}
+            />
+          </Pressable>
+        </View>
+
       </View>
-      {/* {activeMemo && <AudioGraph uri={activeMemo} />} */}
     </View>
   );
 }
@@ -97,9 +134,21 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     height: 150,
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'space-around',
+    display: 'flex',
+    flexDirection: 'row',
   },
   recordButton: {
+    width: 60,
+    height: 60,
+    borderRadius: 60,
+    borderWidth: 2,
+    borderColor: 'gray',
+    padding: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  deleteButton: {
     width: 60,
     height: 60,
     borderRadius: 60,
