@@ -3,14 +3,17 @@ import { FontAwesome5 } from '@expo/vector-icons';
 import { SetStateAction, useCallback, useEffect, useState } from "react";
 import { AVPlaybackStatus, Audio } from 'expo-av';
 import { Sound } from "expo-av/build/Audio";
+import React from "react";
 
 interface MemoListItemProps {
   uri: string;
   activeMemo: string | undefined;
+  meteringData: number[];
   setActiveMemo: React.Dispatch<SetStateAction<string | undefined>>;
+  setCurrentMeteringData: React.Dispatch<SetStateAction<number[]>>;
 }
 
-const MemoListItem: React.FC<MemoListItemProps> = ({ uri, activeMemo, setActiveMemo }) => {
+const MemoListItem: React.FC<MemoListItemProps> = ({ uri, activeMemo, setActiveMemo, meteringData, setCurrentMeteringData }) => {
   const [sound, setSound] = useState<Sound>();
   const [status, setStatus] = useState<AVPlaybackStatus>();
 
@@ -30,9 +33,10 @@ const MemoListItem: React.FC<MemoListItemProps> = ({ uri, activeMemo, setActiveM
     }
 
     console.log('Playing Sound');
-    // await sound.setPositionAsync(0);
-    await sound.setProgressUpdateIntervalAsync(1);
+    await sound.setPositionAsync(0);
+    await sound.setProgressUpdateIntervalAsync(100);
     await sound.playAsync();
+    
   }
 
   const onPlaybackStatusUpdate = useCallback(
@@ -77,6 +81,7 @@ const MemoListItem: React.FC<MemoListItemProps> = ({ uri, activeMemo, setActiveM
         color={'gray'}
         onPress={() => {
           playSound();
+          setCurrentMeteringData(meteringData);
           setActiveMemo(uri);
         }}
       />

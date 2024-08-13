@@ -1,17 +1,23 @@
 import { useEffect, useState } from 'react';
-import { View, StyleSheet, Pressable, FlatList } from 'react-native';
+import { View, StyleSheet, Pressable, FlatList, Text, ScrollView } from 'react-native';
 import { Audio } from 'expo-av';
 import { Recording } from 'expo-av/build/Audio';
 import MemoListItem from './components/MemoListItem';
-import AudioChart from './components/AudioChart'; // Importe o novo componente
+import AudioChart from './components/AudioChart';
+import React from 'react';
+import { MaterialIcons } from '@expo/vector-icons';
+
+interface RecordingData {
+  uri: string;
+  meteringData: number[];
+}
 
 export default function App() {
   const [recording, setRecording] = useState<Recording>();
   const [permissionResponse, requestPermission] = Audio.usePermissions();
-  const [memos, setMemos] = useState<string[]>([]);
+  const [memos, setMemos] = useState<RecordingData[]>([]);
   const [activeMemo, setActiveMemo] = useState<string | undefined>();
-  const [meteringData, setMeteringData] = useState<number[]>([0]);
-  const [showChart, setShowChart] = useState(true);
+  const [currentMeteringData, setCurrentMeteringData] = useState<number[]>([0]);
 
   async function startRecording() {
     try {
@@ -19,22 +25,28 @@ export default function App() {
         console.log('Requesting permission..');
         await requestPermission();
       }
+
       await Audio.setAudioModeAsync({
         allowsRecordingIOS: true,
         playsInSilentModeIOS: true,
       });
 
       console.log('Starting recording..');
+
       const { recording } = await Audio.Recording.createAsync(
         Audio.RecordingOptionsPresets.HIGH_QUALITY
       );
+
       setRecording(recording);
+
       console.log('Recording started');
 
+      setCurrentMeteringData([]);
       recording.setProgressUpdateInterval(1);
       recording.setOnRecordingStatusUpdate((status) => {
-        setMeteringData((prevData) => [...prevData, status.metering || 0]);
+        setCurrentMeteringData((prevData) => [...prevData, status.metering || 0]);
       });
+      
     } catch (err) {
       console.error('Failed to start recording', err);
     }
@@ -52,13 +64,11 @@ export default function App() {
       allowsRecordingIOS: false,
     });
     const uri = recording.getURI();
-    console.log('Metering data:', meteringData);
 
     if (uri) {
-      setMemos((existingMemos) => [uri, ...existingMemos]);
+      setMemos((existingMemos) => [{uri: uri, meteringData: currentMeteringData } as RecordingData, ...existingMemos]);
     }
 
-    setShowChart(true); // Mostra o gráfico após parar a gravação
   }
 
   async function clearMemos() {
@@ -66,57 +76,43 @@ export default function App() {
   }
 
   async function clearMeteringData() {
-    setMeteringData([0]);
+    setCurrentMeteringData([0]);
   }
 
   return (
     <View style={styles.container}>
-      <FlatList
-        data={memos}
-        renderItem={({ item }) => (
-          <MemoListItem uri={item} activeMemo={activeMemo} setActiveMemo={setActiveMemo} />
-        )}
-        keyExtractor={(item) => item}
-      />
+      <ScrollView style={styles.listContainer}>
+        <FlatList
+          data={memos}
+          renderItem={({ item }) => (
+            <MemoListItem 
+              uri={item.uri} 
+              activeMemo={activeMemo} 
+              setActiveMemo={setActiveMemo}
+              setCurrentMeteringData={setCurrentMeteringData}
+              meteringData={item.meteringData}
+            />
+          )}
+          keyExtractor={(item) => item.uri}
+        />
+      </ScrollView>
 
-      {showChart && <AudioChart data={meteringData} />}
+      <AudioChart data={currentMeteringData} />
 
       <View style={styles.footer}>
-        <View style={styles.footer}>
-          <Pressable
-            style={styles.recordButton}
-            onPress={clearMeteringData}
-          >
-            <View
-              style={styles.deleteButton}
-            />
-          </Pressable>
-        </View>
-        <View style={styles.footer}>
-          <Pressable
-            style={styles.recordButton}
-            onPress={recording ? stopRecording : startRecording}
-          >
-            <View
-              style={[
-                styles.redCircle,
-                { width: recording ? '80%' : '100%' },
-                { opacity: recording ? 0.5 : 1 },
-              ]}
-            />
-          </Pressable>
-        </View>
-        <View style={styles.footer}>
-          <Pressable
-            style={styles.recordButton}
-            onPress={clearMemos}
-          >
-            <View
-              style={styles.deleteButton}
-            />
-          </Pressable>
-        </View>
+        <Pressable style={styles.iconButton} onPress={clearMeteringData}>
+          <MaterialIcons name="delete-sweep" size={24} color="gray" />
+          <Text style={styles.iconText}>Limpar Gráfico</Text>
+        </Pressable>
 
+        <Pressable style={styles.recordButton} onPress={recording ? stopRecording : startRecording}>
+          <View style={[styles.redCircle, { width: recording ? '80%' : '100%' }, { opacity: recording ? 0.5 : 1 }]} />
+        </Pressable>
+
+        <Pressable style={styles.iconButton} onPress={clearMemos}>
+          <MaterialIcons name="delete" size={24} color="gray" />
+          <Text style={styles.iconText}>Limpar Gravações</Text>
+        </Pressable>
       </View>
     </View>
   );
@@ -130,6 +126,10 @@ const styles = StyleSheet.create({
     paddingTop: 10,
     marginTop: 30,
   },
+  listContainer: {
+    flex: 1,
+    marginBottom: 10,
+  },
   footer: {
     backgroundColor: 'white',
     height: 150,
@@ -137,6 +137,10 @@ const styles = StyleSheet.create({
     justifyContent: 'space-around',
     display: 'flex',
     flexDirection: 'row',
+  },
+  iconButton: {
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   recordButton: {
     width: 60,
@@ -163,4 +167,10 @@ const styles = StyleSheet.create({
     backgroundColor: 'orangered',
     borderRadius: 30,
   },
+  iconText: {
+    fontSize: 12,
+    color: 'gray',
+    marginTop: 4,
+  },
 });
+
