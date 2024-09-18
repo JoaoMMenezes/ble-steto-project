@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react';
 import { View, StyleSheet, Pressable, FlatList, Text, ScrollView } from 'react-native';
 import { Audio } from 'expo-av';
 import { Recording } from 'expo-av/build/Audio';
-import MemoListItem from './components/MemoListItem/MemoListItem';
-import AudioChart from './components/AudioChart/AudioChart';
+import MemoListItem from '../../components/MemoListItem/MemoListItem';
+import AudioChart from '../../components/AudioChart/AudioChart';
 import React from 'react';
 import { MaterialIcons } from '@expo/vector-icons';
 
@@ -173,4 +173,3 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
 });
-
