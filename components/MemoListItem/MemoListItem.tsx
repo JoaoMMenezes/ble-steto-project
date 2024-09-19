@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet } from "react-native";
+import { View, Text, StyleSheet, Pressable } from "react-native";
 import { FontAwesome5 } from '@expo/vector-icons';
 import { SetStateAction, useCallback, useEffect, useState } from "react";
 import { AVPlaybackStatus, Audio } from 'expo-av';
@@ -74,23 +74,24 @@ const MemoListItem: React.FC<MemoListItemProps> = ({ uri, activeMemo, setActiveM
   const isActive = activeMemo === uri;
 
   return (
-    <View style={[style.container, isActive && style.activeItem]}>
-      <FontAwesome5
-        name={isPlaying ? 'pause' : 'play'}
-        size={20}
-        color={'gray'}
-        onPress={() => {
-          playSound();
-          setCurrentMeteringData(meteringData);
-          setActiveMemo(uri);
-        }}
-      />
+    <View >
+      <Pressable style={[style.container, isActive && style.activeItem]} onPressIn={() => {
+        playSound();
+        setCurrentMeteringData(meteringData);
+        setActiveMemo(uri);
+      }}>
+        <FontAwesome5
+          name={isPlaying ? 'pause' : 'play'}
+          size={20}
+          color={'gray'}
+        />
 
-      <View style={style.playbackContainer}>
-        <View style={style.playbackBackground} />
-        <View style={[style.playbackIndicator, { left: `${progress}%` }]} />
-      </View>
-      <Text>{formatMillis(position || 0)} /{formatMillis(duration || 0)}</Text>
+        <View style={style.playbackContainer}>
+          <View style={style.playbackBackground} />
+          <View style={[style.playbackIndicator, { left: `${progress}%` }]} />
+        </View>
+        <Text>{formatMillis(position || 0)} /{formatMillis(duration || 0)}</Text>
+      </Pressable>
     </View>
   );
 };

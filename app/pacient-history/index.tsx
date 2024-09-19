@@ -1,10 +1,11 @@
 import { View, StyleSheet, Pressable, Text } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Link } from 'expo-router';
 
 export default function Page() {
   return (
     <View style={styles.screenContainer}>
-        <Text>Home</Text>
+        <Text>Ausculta</Text>
       <Link href="/" asChild>
         <Pressable style={styles.button}>
           <Text style={styles.buttonText}>Voltar</Text>
