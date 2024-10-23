@@ -34,12 +34,15 @@ const AudioChart: React.FC<AudioChartProps> = ({ data }) => {
               },
             ],
           }}
-          width={Math.max(screenWidth, modifiedData.length * 6)}
+          width={Math.max(screenWidth, modifiedData.length)}
           height={320}
-          yAxisLabel=""
-          yAxisSuffix=""
           withShadow={false}
+          withDots={false}
+          withVerticalLabels={false}
+          withHorizontalLabels={false}
+          withVerticalLines={false}
           yAxisInterval={1}
+          transparent={true}
           chartConfig={{
             backgroundGradientFrom: "transparent",
             backgroundGradientFromOpacity: 0,
@@ -47,23 +50,14 @@ const AudioChart: React.FC<AudioChartProps> = ({ data }) => {
             backgroundGradientToOpacity: 0,
             decimalPlaces: 4,
             color: (opacity = 1) => `transparent`,
-            labelColor: (opacity = 1) => `#fff`,
             style: {
               borderRadius: 16,
             },
-            propsForDots: {
-              r: '0',
-            },
-            propsForHorizontalLabels: {
-              fontSize: 10,
-            },
           }}
           bezier
-          withVerticalLines={false}
           style={{
             marginVertical: 8,
-            borderRadius: 16,
-            backgroundColor: 'transparent',
+            marginLeft: -(screenWidth * 0.1),
           }}
         />
       </ScrollView>
